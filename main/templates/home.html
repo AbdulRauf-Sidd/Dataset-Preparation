@@ -1,0 +1,44 @@
+<!-- home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Histogram Equalization with Contrast Slider</title>
+    <!-- Add any necessary CSS stylesheets -->
+</head>
+<body>
+    <h1>Histogram Equalization with Contrast Slider</h1>
+    <input type="range" min="0" max="255" value="255" id="contrastSlider">
+<br>
+<img id="imageDisplay" src="" alt="Equalized Image">
+<br>
+<img id="histogramPlot" src="" alt="Histogram">
+    
+    <!-- Add any necessary JavaScript -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Function to update image and histogram plot
+            function updateContrast(maxIntensity) {
+                // Make AJAX request to Django view
+                $.get('/update_contrast/', {max_intensity: maxIntensity}, function(response) {
+                    // Update image display with the response
+                    $('#imageDisplay').attr('src', 'data:image/png;base64,' + response.image_data);
+                    // Update histogram plot with the response
+                    $('#histogramPlot').attr('src', 'data:image/png;base64,' + response.histogram_data);
+                });
+            }
+    
+            // Update image and histogram plot when slider value changes
+            $('#contrastSlider').on('input', function() {
+                var maxIntensity = $(this).val();
+                updateContrast(maxIntensity);
+            });
+    
+            // Initialize image and histogram plot with default values
+            updateContrast(255);
+        });
+    </script>
+</body>
+</html>

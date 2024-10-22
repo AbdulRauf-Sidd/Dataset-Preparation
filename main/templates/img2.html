@@ -1,0 +1,49 @@
+<!-- templates/home.html -->
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Display</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .center-box {
+            width: 50%;
+            max-width: 500px;
+            border: 1px solid #ccc;
+            padding: 20px;
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="center-box">
+        <h2>Image Display</h2>
+        <img src="{% static 'images/preview2.jpg' %}" alt="Image">
+        <br>
+        <form method="POST">
+            {% csrf_token %}
+        <input type="number" name="value">
+        <button type="submit">
+            change
+        </button>
+    </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,193 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing - Gamma, Threshold, Dilation, Erosion</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
+            height: 60%;
+        }
+        #image-container, #histogram-container {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+        #image {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        #slider-container {
+            width: 80%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .slider-wrapper {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .slider {
+            width: 80%;
+            height: 25px; /* Slider height */
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ddd;
+            outline: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            border-radius: 10px;
+        }
+        .slider:hover {
+            opacity: 1;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px; /* Thumb width */
+            height: 30px; /* Thumb height */
+            background: #4CAF50;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider::-moz-range-thumb {
+            width: 30px; /* Thumb width */
+            height: 30px; /* Thumb height */
+            background: #4CAF50;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        #button-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<body>
+    <div id="container">
+        <div id="image-container">
+            <img id="image" src="{% static source %}" alt="Image">
+        </div>
+        <div id="histogram-container">
+            <canvas id="histogramCanvas" width="400" height="200"></canvas>
+        </div>
+    </div>
+    <div id="slider-container">
+        <div class="slider-wrapper">
+            <label for="gamma-slider">Gamma:</label>
+            <input id="gamma-slider" class="slider" type="range" min="0.1" max="2" value="1.0" step="0.05" name="gamma-value">
+        </div>
+        <div class="slider-wrapper">
+            <label for="threshold-slider">Threshold:</label>
+            <input id="threshold-slider" class="slider" type="range" min="10" max="220" value="45" step="1" name="threshold-value">
+        </div>
+        <div class="slider-wrapper">
+            <label for="dilation-slider">Dilation:</label>
+            <input id="dilation-slider" class="slider" type="range" min="1" max="20" value="1" step="1" name="dilation-value">
+        </div>
+        <div class="slider-wrapper">
+            <label for="erosion-slider">Erosion:</label>
+            <input id="erosion-slider" class="slider" type="range" min="1" max="20" value="1" step="1" name="erosion-value">
+        </div>
+    </div>
+    <div id="button-container">
+        <button id="equalize-button">Equalize Histogram</button>
+    </div>
+
+    <script>
+        const x_axis = [];
+        function createArray() {
+            for (let i = 0; i <= 255; i++) {
+                x_axis.push(i);
+            }
+        }
+
+        window.onload = function() {
+            createArray();
+            updateImageAndHistogram();
+        };
+
+        const histogramData = {
+            labels: x_axis,
+            datasets: [{
+                label: 'Histogram',
+                data: [],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const ctx = document.getElementById('histogramCanvas').getContext('2d');
+        const histogramChart = new Chart(ctx, {
+            type: 'bar',
+            data: histogramData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function updateImageAndHistogram() {
+            const gammaValue = document.getElementById('gamma-slider').value;
+            const thresholdValue = document.getElementById('threshold-slider').value;
+            const dilationValue = document.getElementById('dilation-slider').value;
+            const erosionValue = document.getElementById('erosion-slider').value;
+
+            fetch(`/update?gamma=${gammaValue}&threshold=${thresholdValue}&dilation=${dilationValue}&erosion=${erosionValue}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('image').src = 'data:image/jpeg;base64,' + data.image;
+                    histogramChart.data.datasets[0].data = data.histo;
+                    histogramChart.update();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function equalize() {
+            fetch('/equalize')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('image').src = 'data:image/jpeg;base64,' + data.image;
+                    histogramChart.data.datasets[0].data = data.histo;
+                    histogramChart.update();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        document.getElementById('gamma-slider').addEventListener('input', updateImageAndHistogram);
+        document.getElementById('threshold-slider').addEventListener('input', updateImageAndHistogram);
+        document.getElementById('dilation-slider').addEventListener('input', updateImageAndHistogram);
+        document.getElementById('erosion-slider').addEventListener('input', updateImageAndHistogram);
+        document.getElementById('equalize-button').addEventListener('click', equalize);
+    </script>
+</body>
+</html>
