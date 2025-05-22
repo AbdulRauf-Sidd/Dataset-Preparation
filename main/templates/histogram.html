@@ -1,0 +1,281 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Processing - Gamma, Threshold, Dilation, Erosion</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        #container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80%;
+            height: 60%;
+        }
+        #image-container, #histogram-container {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #ccc;
+            margin: 5px;
+        }
+        #image {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        #slider-container {
+            width: 80%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .slider-wrapper {
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .slider {
+            width: 80%;
+            height: 25px; /* Slider height */
+            -webkit-appearance: none;
+            appearance: none;
+            background: #ddd;
+            outline: none;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+            border-radius: 10px;
+        }
+        .slider:hover {
+            opacity: 1;
+        }
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 30px; /* Thumb width */
+            height: 30px; /* Thumb height */
+            background: #4f8cff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .slider::-moz-range-thumb {
+            width: 30px; /* Thumb width */
+            height: 30px; /* Thumb height */
+            background: #4f8cff;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        #button-container {
+            margin-top: 20px;
+        }
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+        #modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            text-align: center;
+        }
+        #close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        #close-btn:hover,
+        #close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn {
+            padding: 18px 36px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            background: #4f8cff;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(79,140,255,0.15);
+            transition: background 0.2s, transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px) scale(1.04);
+        }
+    </style>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<body>
+    <h1>Histogram Visualization</h1>
+    <div id="container">
+        <div id="image-container">
+            <img id="image" alt="Image">
+        </div>
+        <div id="histogram-container">
+            <canvas id="histogramCanvas" width="400" height="200"></canvas>
+        </div>
+    </div>
+    <div id="slider-container">
+        <div class="slider-wrapper">
+            <label for="gamma-slider">Gamma:</label>
+            <input id="gamma-slider" class="slider" type="range" min="0.1" max="2" value="0.35" step="0.05" name="gamma-value">
+        </div>
+    </div>
+    <div id="button-container">
+        <button class="btn" id="equalize-button">Equalize Histogram</button>
+        <button class="btn" id="save-button">Save Image</button>
+        <button class="btn" id="back-button">Back</button>
+    </div>
+
+    <!-- Modal Structure -->
+    <div id="modal">
+        <div id="modal-content">
+            <span id="close-btn">&times;</span>
+            <p id="modal-message"></p>
+        </div>
+    </div>
+
+    <script>
+        const x_axis = [];
+        function createArray() {
+            for (let i = 0; i <= 255; i++) {
+                x_axis.push(i);
+            }
+        }
+
+        window.onload = function() {
+            createArray();
+            updateImageAndHistogram();
+
+            // Close the modal when the close button is clicked
+            document.getElementById('close-btn').onclick = function() {
+                document.getElementById('modal').style.display = 'none';
+            }
+
+            // Close the modal when clicking outside of the modal content
+            window.onclick = function(event) {
+                const modal = document.getElementById('modal');
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        };
+
+        const histogramData = {
+            labels: x_axis,
+            datasets: [{
+                label: 'Histogram',
+                data: [],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        };
+
+        const ctx = document.getElementById('histogramCanvas').getContext('2d');
+        const histogramChart = new Chart(ctx, {
+            type: 'bar',
+            data: histogramData,
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        function updateImageAndHistogram() {
+            const gammaValue = document.getElementById('gamma-slider').value;
+
+            fetch(`/histogram-view/?gamma=${gammaValue}`, {
+                method: 'PUT',
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('image').src = 'data:image/jpeg;base64,' + data.image;
+                    histogramChart.data.datasets[0].data = data.histo;
+                    histogramChart.update();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function equalize() {
+            fetch('/equalize')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('image').src = 'data:image/jpeg;base64,' + data.image;
+                    histogramChart.data.datasets[0].data = data.histo;
+                    histogramChart.update();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+
+        function saveImage() {
+            const gammaValue = document.getElementById('gamma-slider').value;
+
+            fetch(`/histogram-view/?gamma=${gammaValue}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                // body: JSON.stringify({ image: document.getElementById('image').src })
+            })
+                .then(response => {
+                    if (response.status === 200) {
+                        document.getElementById('modal-message').textContent = 'Image has been saved successfully!';
+                        document.getElementById('modal').style.display = 'block';
+                    } else {
+                        alert('Failed to save image.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while saving the image.');
+                });
+        }
+
+        document.getElementById('gamma-slider').addEventListener('input', updateImageAndHistogram);
+        document.getElementById('equalize-button').addEventListener('click', equalize);
+        document.getElementById('save-button').addEventListener('click', saveImage);
+        document.getElementById('back-button').addEventListener('click', function() {
+            window.history.back();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DataPrep Programm</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            margin-bottom: 40px;
+            color: #2d3a4b;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        .button-group {
+            display: flex;
+            gap: 30px;
+        }
+        .btn {
+            padding: 18px 36px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            background: #4f8cff;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(79,140,255,0.15);
+            transition: background 0.2s, transform 0.2s;
+        }
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px) scale(1.04);
+        }
+    </style>
+</head>
+<body>
+    <h1>DataPrep Pipeline</h1>
+    <div class="button-group">
+        <a class="btn" href="histogram" style="text-decoration: none;">Histogram Visualization</a>
+        <a class="btn" href="morphology" style="text-decoration: none;">Morphological Operation</a>
+        <a class="btn" href="augmentation" style="text-decoration: none;">Data augmentation</a>
+    </div>
+</body>
+</html>

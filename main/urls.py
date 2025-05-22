@@ -19,7 +19,13 @@ from django.urls import path, include
 from . import views
 
 urlpatterns = [
-    path("", views.gamma, name='home'),
+    path("", views.home, name='home'),
+    path("histogram/", views.histogram, name='histogram'),
+    path("image-update/", views.upload_image, name='update_image'),
+    path("histogram-view/", views.histogram_view, name='update_image2'),
+    path("hough/", views.hough, name='home'),
     path("update/", views.update, name='update'),
+    path("update2/", views.hough_circles, name='hough'),
     path("equalize/", views.histogram_equalization, name='equalize'),
+    path("augmentation/", views.augmentation, name='augmentation'),
 ]

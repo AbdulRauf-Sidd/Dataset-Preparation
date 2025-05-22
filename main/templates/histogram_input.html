@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Histogram Visualization</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            margin-bottom: 40px;
+            color: #2d3a4b;
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+        .button-group {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .btn {
+            padding: 18px 36px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 8px;
+            background: #4f8cff;
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(79,140,255,0.15);
+            transition: background 0.2s, transform 0.2s;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px) scale(1.04);
+        }
+        .upload-input {
+            font-size: 1rem;
+            padding: 10px;
+            border: 2px solid #4f8cff;
+            border-radius: 8px;
+            background-color: #fff;
+            color: #4f8cff;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .upload-input:hover {
+            background-color: #4f8cff;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Histogram Visualization</h1>
+    <div class="button-group">
+        <a class="btn" href="/">Back to Home</a>
+    </div>
+    <input class="upload-input" type="file" id="fileInput" accept="image/*" style="display: none;">
+    <button class="btn" id="uploadButton">Upload Image</button>
+
+    <script>
+        document.getElementById('uploadButton').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    // const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    console.log('file:', file);
+
+    if (file) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        fetch('/image-update/', {
+            method: 'POST',
+            // headers: {
+            //     'X-CSRFToken': csrfToken
+            // },
+            body: formData
+        })
+        .then(response => {
+            if (response.status === 200) {
+                window.location.href = '/histogram-view/'; // Replace with your redirect URL
+            } else {
+                alert('Failed to upload image.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while uploading the image.');
+        });
+    } else {
+        alert('Please select a file to upload.');
+    }
+});
+
+    </script>
+</body>
+</html>

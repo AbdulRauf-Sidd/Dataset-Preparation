@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input Form</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            font-size: 1rem;
+            color: #333;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            background: #4f8cff;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 1rem;
+            user-select: none;
+            position: relative;
+        }
+        .checkbox-label input[type="checkbox"] {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .custom-checkbox {
+            width: 20px;
+            height: 20px;
+            background: #f0f0f0;
+            border: 2px solid #4f8cff;
+            border-radius: 5px;
+            margin-right: 10px;
+            display: inline-block;
+            transition: background 0.2s, border-color 0.2s;
+            position: relative;
+        }
+        .checkbox-label input[type="checkbox"]:checked + .custom-checkbox {
+            background: #4f8cff;
+            border-color: #2563eb;
+        }
+        .custom-checkbox::after {
+            content: "";
+            position: absolute;
+            display: none;
+            left: 5px;
+            top: 1px;
+            width: 6px;
+            height: 12px;
+            border: solid #fff;
+            border-width: 0 3px 3px 0;
+            transform: rotate(45deg);
+        }
+        .checkbox-label input[type="checkbox"]:checked + .custom-checkbox::after {
+            display: block;
+        }
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+        #modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            text-align: center;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+        #close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        #close-btn:hover,
+        #close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Augmentation</h1>
+    <form id="inputForm" method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="rotation_range">Rotation Range:</label>
+        <input type="number" id="rotation_range" name="rotation_range" step="0.1" value="3" required>
+
+        <label for="width_shift_range">Width Shift Range:</label>
+        <input type="number" id="width_shift_range" name="width_shift_range" step="0.1" value="0.1" required>
+
+        <label for="height_shift_range">Height Shift Range:</label>
+        <input type="number" id="height_shift_range" name="height_shift_range" step="0.1" value="0.1" required>
+
+        <label for="zoom_range">Zoom Range:</label>
+        <input type="number" id="zoom_range" name="zoom_range" step="0.1" value="0.1" required>
+
+        <label class="checkbox-label">
+            <input type="checkbox" id="resize" name="resize">
+            <span class="custom-checkbox"></span>
+            Resize
+        </label>
+
+        <div id="resizeFields" style="display: none;">
+            <label for="width">Width:</label>
+            <input type="number" id="width" name="width" min="1">
+
+            <label for="height">Height:</label>
+            <input type="number" id="height" name="height" min="1">
+        </div>
+
+        <button type="button" id="submitButton">Submit</button>
+    </form>
+
+    <!-- Modal Structure -->
+    <div id="modal">
+        <div id="modal-content">
+            <span id="close-btn">&times;</span>
+            <p id="modal-message">Augmented successfully!</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('resize').addEventListener('change', function() {
+            document.getElementById('resizeFields').style.display = this.checked ? 'flex' : 'none';
+        });
+
+        document.getElementById('submitButton').addEventListener('click', function() {
+            const form = document.getElementById('inputForm');
+            const formData = new FormData(form);
+
+            fetch('/augmentation/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => {
+                if (response.status === 200) {
+                    document.getElementById('modal').style.display = 'block';
+                } else {
+                    alert('Failed to submit the form.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while submitting the form.');
+            });
+        });
+
+        document.getElementById('close-btn').addEventListener('click', function() {
+            document.getElementById('modal').style.display = 'none';
+        });
+
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('modal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
